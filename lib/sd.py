@@ -1,0 +1,1 @@
+#este script sirve para montar y desmontar la tarjeta SD
