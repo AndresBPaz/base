@@ -1,8 +1,8 @@
-
 import ujson
+from lib.display import Display
 
-def call_loader():
-    with open('loader.py', 'r') as f:
+def implements_loader():
+    with open('implements.py', 'r') as f:
         exec(f.read())
 
 def carga_configuracion():
@@ -16,10 +16,22 @@ def call_dev():
     with open('dev.py', 'r') as f:
         exec(f.read())
 
+
+print("Cargando configuración...")
+#carga de variables globales.
+carga_configuracion()
+
+print("Cargando modulos personalizados...")
+#carga de modulos personalizados.
+implements_loader()
+
+display = Display()
+display.iniciar_display()
+display.set_welcome_message("¡Bienvenido a la placa TTGO T3 V1.6!")
+display.set_welcome_duration(5)
+display.print_welcome_message(clear_screen=True)
+
 # Bucle principal
 while True:
-    #carga de variables globales.
-    carga_configuracion()
-
-    #carga de modulos personalizados.
-    call_loader()
+    #carga de clase encargada de llamar los scripts personalizados. 
+    call_dev()

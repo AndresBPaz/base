@@ -3,13 +3,19 @@ import network
 import time
 
 class Wifi:
-    def __init__(self, SSID = "", PASSWORD = ""):
-        #carga el ssid y la contraseña de la red
-        ssid = SSID
-        password = PASSWORD
+    def __init__(self):
+        pass
+
+    # Función para conectar a la red Wi-Fi
+    def connectwifi(ssid, password):
 
         if ssid != "" or password != "":
-            self.connectwifi(ssid, password)
+            sta = network.WLAN(network.STA_IF)
+            sta.active(True)
+            sta.connect(ssid, password)
+            while not sta.is_connected():
+                time.sleep(0.5)
+            print("Conectado a Wi-Fi:", sta.ifconfig()[0])
 
         # Check if connection was successful and update attributes
         if self.is_connected():
@@ -23,15 +29,6 @@ class Wifi:
             print("Conectado a la red WiFi con IP:", self.IP)
         else:
             print("Error al conectar a la red WiFi")
-
-    # Función para conectar a la red Wi-Fi
-    def connectwifi(ssid, password):
-        sta = network.WLAN(network.STA_IF)
-        sta.active(True)
-        sta.connect(ssid, password)
-        while not sta.is_connected():
-            time.sleep(0.5)
-        print("Conectado a Wi-Fi:", sta.ifconfig()[0])
     
     def is_connected(self):
         """
@@ -43,4 +40,6 @@ class Wifi:
 
         return self.sta.is_connected()
 
-        
+# example usage
+# wifi = Wifi()
+# wifi.connectwifi("your_ssid", "your_password")

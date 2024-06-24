@@ -34,9 +34,17 @@ class apwifi:
         ap = network.WLAN(network.AP_IF)
         ap.active(True)
         ap.config(essid=self.SSID, password=self.password)
+        ap.config(essid="my_hotspot", password="mypassword")
 
         # Verify hotspot creation
         if ap.active():
             print("Wi-Fi hotspot created:", self.SSID)
         else:
             print("Failed to create Wi-Fi hotspot")
+
+
+
+# example usage
+# wifi_ap = apwifi()
+# wifi_ap.create_ap()  # Creates the Wi-Fi hotspot
+# print("Wi-Fi hotspot created:", apwifi.SSID)

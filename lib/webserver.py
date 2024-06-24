@@ -72,5 +72,5 @@ class MiServidorWeb:
             self.server.Poll()  # Wait for and handle incoming requests
 
 # Example usage:
-mi_servidor = MiServidorWeb()
-mi_servidor.ejecutar()
+# mi_servidor = MiServidorWeb()
+# mi_servidor.ejecutar()
