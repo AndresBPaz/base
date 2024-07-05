@@ -17,11 +17,11 @@ def call_dev():
         exec(f.read())
 
 
-print("Cargando configuración...")
+#print("Cargando configuración...")
 #carga de variables globales.
 carga_configuracion()
 
-print("Cargando modulos personalizados...")
+#print("Cargando modulos personalizados...")
 #carga de modulos personalizados.
 
 implements_loader()
@@ -34,11 +34,11 @@ display.set_welcome_message("¡Bienvenido a la placa TTGO T3 V1.6!")
 display.set_welcome_duration(5)
 display.print_welcome_message(clear_screen=True)
 
-# Imprimir el menú
-display.imprimir_menu()
 
 # Bucle principal
 while True:
     #carga de clase encargada de llamar los scripts personalizados. 
     #call_dev()
+    # Imprimir el menú
+    display.imprimir_menu()
     pass

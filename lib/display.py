@@ -106,52 +106,34 @@ class Display:
 
         return menu_items
 
-    def imprimir_menu(self):
+    def imprimir_menu(self, items=None):
+        self.iniciar_display()
         # Print the menu to the OLED display
         current_item = 0
-        menu_items = self.load_menu()
+        menu_items = self.load_menu(items)
+        last_item = -1  # Para rastrear el último elemento seleccionado
+
         while True:
-            # Clear the OLED display
-            self.limpiar_display()
+            if current_item != last_item:  # Solo actualizar si el elemento seleccionado ha cambiado
+                self.limpiar_display()
+                for i, item in enumerate(menu_items):
+                    if i == current_item:
+                        self.oled.text(f"> {item}", 0, 10 + (i * 16), 1)
+                    else:
+                        self.oled.text(item, 0, 10 + (i * 16), 1)
+                self.oled.show()
+                last_item = current_item  # Actualizar el último elemento seleccionado
 
-            # Print the menu title
-            # oled.text(data['title'], 0, 0, 1)
-
-            # Print the menu items
-            for i, item in enumerate(menu_items):
-                if i == current_item:
-                    # Print the current item in bold
-                    #self.oled.text(item, 0, 10 + (i * 16), 1)
-                    self.oled.text(f"> {item}", 0, 10 + (i * 16), 1)
-
-                else:
-                    # Print the other items in normal font
-                    #self.oled.text(item, 0, 10 + (i * 16), 0)
-                    self.oled.text(item, 0, 10 + (i * 16), 1)
-
-            # Display the OLED
-            self.oled.show()
-
-            # Wait for a button press
             buttons = self.get_buttons()
-
-            # Handle the button presses
             if buttons & BUTTON_UP:
-                # Move the current item up one if it is not already at the top
                 if current_item > 0:
                     current_item -= 1
             elif buttons & BUTTON_DOWN:
-                # Move the current item down one if it is not already at the bottom
                 if current_item < len(menu_items) - 1:
                     current_item += 1
             elif buttons & BUTTON_SELECT:
-                # Select the current item
                 print("Selected item:", menu_items[current_item])
-
-                # Break out of the loop
                 break
-
-            # Wait for a short period of time
             time.sleep(0.1)
             
     def get_buttons(self):
