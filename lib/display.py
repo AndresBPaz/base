@@ -2,6 +2,16 @@
 from libsys.ssd1306 import SSD1306_I2C
 import machine
 import time
+import json
+
+BUTTON_UP_PIN = 12
+BUTTON_DOWN_PIN = 13
+BUTTON_SELECT_PIN = 14
+
+BUTTON_UP = 0x01
+BUTTON_DOWN = 0x02
+BUTTON_SELECT = 0x04
+
 
 class Display:
 
@@ -9,9 +19,14 @@ class Display:
     i2c, oled = None, None
 
     def __init__(self):
+        self.i2c = None
+        self.oled = None
         self.welcome_message = None  # Mensaje de bienvenida
         self.welcome_duration = None  # Duración del mensaje de bienvenida
         self.terminal_history = []  # Lista vacía para almacenar el historial de la terminal
+        self.button_up = machine.Pin(BUTTON_UP_PIN, machine.Pin.IN, machine.Pin.PULL_UP)
+        self.button_down = machine.Pin(BUTTON_DOWN_PIN, machine.Pin.IN, machine.Pin.PULL_UP)
+        self.button_select = machine.Pin(BUTTON_SELECT_PIN, machine.Pin.IN, machine.Pin.PULL_UP)
     
     def iniciar_display(self):
         # Inicializar el objeto self.i2c
@@ -55,63 +70,107 @@ class Display:
             #limpiar display
             self.limpiar_display()
 
-
-    def print_terminal_history(self):
-
-        self.iniciar_display()
-
-        # Get the display size
-        display_width, display_height = self.oled.get_size()
-
-        # Limit the number of lines to display based on screen size
-        max_lines = display_height - 5  # Subtract space for title bar and border
-
-        # Start from the last line of history
-        start_index = max(0, len(self.terminal_history) - max_lines)
-
-        # Scroll through the history and display the lines
-        for i in range(start_index, len(self.terminal_history)):
-            line = self.terminal_history[i]
-
-            # Calculate position for the current line
-            y_position = 5 + (i - start_index) * 10  # Assuming font size is 10 pixels
-
-            # Draw the line on the screen
-            self.oled.text(line, 0, y_position, 1)
-            self.oled.show()
-
-
-
-    # Agregar texto al historial de la terminal
-    def add_to_terminal_history(self, text):
-        """
-        Agrega una línea de texto al historial de la terminal.
-
-        Args:
-            text (str): La línea de texto que se agregará al historial de la terminal.
-        """
-        self.terminal_history.append(text)
-
     def limpiar_display(self):
         # Limpiar la pantalla
         self.oled.fill(0)
         self.oled.show()
 
-# Establecer el mensaje de bienvenida
-# display.set_welcome_message("¡Bienvenido a la placa TTGO T3 V1.6!")
+    def load_menu(self, items=None):
+        """
+        Loads menu items from either a JSON file or a provided dictionary.
 
-# Establecer la duración del mensaje de bienvenida en 5 segundos
-# display.set_welcome_duration(5)
+        Args:
+            items (dict, optional): A dictionary containing menu items.
+                If None (default), loads menu items from 'menu.json'.
 
-# Mostrar el mensaje de bienvenida
-# display.print_welcome_message(clear_screen=True)
+        Returns:
+            list: A list of menu items loaded from the specified source.
 
-# Agregar texto al historial de la terminal
-# display.add_to_terminal_history("Se ha iniciado el programa.")
-# display.add_to_terminal_history("Conectando a la red Wi-Fi...")
-# display.add_to_terminal_history("Conexión a Wi-Fi establecida.")
-# display.add_to_terminal_history("Leyendo datos del sensor...")
+        Raises:
+            ValueError: If both 'items' and 'menu.json' file are missing.
+        """
 
-# Mostrar el historial de la terminal
-# display.print_terminal_history()
+        if items is None:
+            # Load menu items from 'menu.json' file
+            try:
+                with open('menu.json') as f:
+                    data = json.load(f)
+                menu_items = data['items']
+            except OSError:
+                raise ValueError("Menu file 'menu.json' not found. Please provide a dictionary or create the file.")
+        else:
+            # Use provided dictionary as menu items
+            if not isinstance(items, dict):
+                raise ValueError("Invalid argument: 'items' must be a dictionary.")
+            menu_items = items['items']
+
+        return menu_items
+
+    def imprimir_menu(self):
+        # Print the menu to the OLED display
+        current_item = 0
+        menu_items = self.load_menu()
+        while True:
+            # Clear the OLED display
+            self.limpiar_display()
+
+            # Print the menu title
+            # oled.text(data['title'], 0, 0, 1)
+
+            # Print the menu items
+            for i, item in enumerate(menu_items):
+                if i == current_item:
+                    # Print the current item in bold
+                    #self.oled.text(item, 0, 10 + (i * 16), 1)
+                    self.oled.text(f"> {item}", 0, 10 + (i * 16), 1)
+
+                else:
+                    # Print the other items in normal font
+                    #self.oled.text(item, 0, 10 + (i * 16), 0)
+                    self.oled.text(item, 0, 10 + (i * 16), 1)
+
+            # Display the OLED
+            self.oled.show()
+
+            # Wait for a button press
+            buttons = self.get_buttons()
+
+            # Handle the button presses
+            if buttons & BUTTON_UP:
+                # Move the current item up one if it is not already at the top
+                if current_item > 0:
+                    current_item -= 1
+            elif buttons & BUTTON_DOWN:
+                # Move the current item down one if it is not already at the bottom
+                if current_item < len(menu_items) - 1:
+                    current_item += 1
+            elif buttons & BUTTON_SELECT:
+                # Select the current item
+                print("Selected item:", menu_items[current_item])
+
+                # Break out of the loop
+                break
+
+            # Wait for a short period of time
+            time.sleep(0.1)
+            
+    def get_buttons(self):
+        buttons = 0
+        if not self.button_up.value():
+            buttons |= BUTTON_UP
+        if not self.button_down.value():
+            buttons |= BUTTON_DOWN
+        if not self.button_select.value():
+            buttons |= BUTTON_SELECT
+        return buttons
+    
+# Crear instancia de Display
+#display = Display()
+
+# Configurar mensaje de bienvenida
+#display.set_welcome_message("¡Bienvenido a la placa TTGO T3 V1.6!")
+#display.set_welcome_duration(5)
+#display.print_welcome_message(clear_screen=True)
+
+ 
 

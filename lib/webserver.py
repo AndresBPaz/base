@@ -49,7 +49,7 @@ class MiServidorWeb:
                 with open(os.path.join(self.web_path, "web_files", "index.html"), "r") as f:
                     html_content = f.read()
                 response.WriteResponseOk(contentType="text/html", contentCharset="UTF-8", content=html_content)
-            except FileNotFoundError:
+            except OSError:
                 response.WriteResponse(status="404 Not Found")
 
         else:
