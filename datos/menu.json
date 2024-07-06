@@ -1,0 +1,11 @@
+{
+    "title": "Menu",
+    "items": [
+      {"name": "WiFi", "script": "wifi.py"},
+      {"name": "Bluetooth", "script": "bluetooth.py"},
+      {"name": "Archivos", "script": "archivos.py"},
+      {"name": "RF", "script": "rf.py"},
+      {"name": "Ajustes", "script": "ajustes.py"}
+    ]
+  }
+  

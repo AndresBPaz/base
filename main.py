@@ -1,5 +1,6 @@
 import json
 from lib.display import Display 
+import sys
 
 def implements_loader():
     with open('implements.py', 'r') as f:
@@ -30,15 +31,11 @@ implements_loader()
 display = Display()
 
 # Configurar mensaje de bienvenida
-display.set_welcome_message("¡Bienvenido a la placa TTGO T3 V1.6!")
-display.set_welcome_duration(5)
-display.print_welcome_message(clear_screen=True)
-
+display.print_welcome_message("¡Hola Mundo!", 5 , clear_screen=True)
 
 # Bucle principal
 while True:
     #carga de clase encargada de llamar los scripts personalizados. 
     #call_dev()
-    # Imprimir el menú
-    display.imprimir_menu()
-    pass
+    # Cargar e imprimir el menú
+   display.menu_principal()

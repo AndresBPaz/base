@@ -3,11 +3,14 @@ from libsys.ssd1306 import SSD1306_I2C
 import machine
 import time
 import json
+import sys
 
+# Definir pines de entrada y salida
 BUTTON_UP_PIN = 12
 BUTTON_DOWN_PIN = 13
 BUTTON_SELECT_PIN = 14
 
+# Definir botones
 BUTTON_UP = 0x01
 BUTTON_DOWN = 0x02
 BUTTON_SELECT = 0x04
@@ -27,73 +30,57 @@ class Display:
         self.button_up = machine.Pin(BUTTON_UP_PIN, machine.Pin.IN, machine.Pin.PULL_UP)
         self.button_down = machine.Pin(BUTTON_DOWN_PIN, machine.Pin.IN, machine.Pin.PULL_UP)
         self.button_select = machine.Pin(BUTTON_SELECT_PIN, machine.Pin.IN, machine.Pin.PULL_UP)
+        self.iniciar_display()
+        self.oled.fill(1)
+        self.oled.show()
+        time.sleep(1)
+        self.limpiar_display()
+
     
     def iniciar_display(self):
         # Inicializar el objeto self.i2c
         self.i2c = machine.SoftI2C(scl=machine.Pin(22), sda=machine.Pin(21))
         self.oled = SSD1306_I2C(128,64,self.i2c)
 
-    def set_welcome_message(self, message):
-        """
-        Establece el mensaje de bienvenida que se mostrará al iniciar el programa.
-
-        Args:
-            message (str): El mensaje de bienvenida a mostrar.
-        """
+    def print_welcome_message(self, message, duration_in_seconds, clear_screen=False):
         self.welcome_message = message
-
-    def set_welcome_duration(self, duration_in_seconds):
-        """
-        Establece la duración del mensaje de bienvenida en segundos.
-
-        Args:
-            duration_in_seconds (float): La duración del mensaje de bienvenida en segundos.
-        """
         self.welcome_duration = duration_in_seconds
-
-    def print_welcome_message(self, clear_screen=False):
         if self.welcome_message and self.welcome_duration:
-
-            self.iniciar_display()
-
-            # Clear the screen if requested
             if clear_screen:
                 self.limpiar_display()
 
-            # Display the welcome message centered
-            self.oled.text(self.welcome_message, 32, 32, 1)
+            lines = self.split_text_into_lines(self.welcome_message, self.oled.width)
+
+            y_offset = (self.oled.height - (len(lines) * 10)) // 2  # Adjust 10 based on the font height
+            for i, line in enumerate(lines):
+                x_offset = (self.oled.width - len(line) * 8) // 2  # Adjust 8 based on the font width
+                self.oled.text(line, x_offset, y_offset + i * 10, 1)
+
             self.oled.show()
-
-            # Wait for the specified duration
             time.sleep(self.welcome_duration)
-
-            #limpiar display
             self.limpiar_display()
 
-    def limpiar_display(self):
-        # Limpiar la pantalla
-        self.oled.fill(0)
-        self.oled.show()
+    def split_text_into_lines(self, text, max_width):
+        words = text.split()
+        lines = []
+        current_line = words[0]
+
+        for word in words[1:]:
+            if len(current_line + ' ' + word) * 8 <= max_width:  # Adjust 8 based on the font width
+                current_line += ' ' + word
+            else:
+                lines.append(current_line)
+                current_line = word
+
+        lines.append(current_line)
+        return lines
 
     def load_menu(self, items=None):
-        """
-        Loads menu items from either a JSON file or a provided dictionary.
-
-        Args:
-            items (dict, optional): A dictionary containing menu items.
-                If None (default), loads menu items from 'menu.json'.
-
-        Returns:
-            list: A list of menu items loaded from the specified source.
-
-        Raises:
-            ValueError: If both 'items' and 'menu.json' file are missing.
-        """
 
         if items is None:
             # Load menu items from 'menu.json' file
             try:
-                with open('menu.json') as f:
+                with open('datos/menu.json') as f:
                     data = json.load(f)
                 menu_items = data['items']
             except OSError:
@@ -112,30 +99,70 @@ class Display:
         current_item = 0
         menu_items = self.load_menu(items)
         last_item = -1  # Para rastrear el último elemento seleccionado
+        start_index = 0  # Índice inicial para el desplazamiento
 
         while True:
-            if current_item != last_item:  # Solo actualizar si el elemento seleccionado ha cambiado
-                self.limpiar_display()
-                for i, item in enumerate(menu_items):
-                    if i == current_item:
-                        self.oled.text(f"> {item}", 0, 10 + (i * 16), 1)
-                    else:
-                        self.oled.text(item, 0, 10 + (i * 16), 1)
-                self.oled.show()
-                last_item = current_item  # Actualizar el último elemento seleccionado
+            # Determinar el rango de elementos a mostrar
+            end_index = start_index + 4  # Mostrar 5 elementos a la vez
+            visible_items = menu_items[start_index:end_index]
 
-            buttons = self.get_buttons()
-            if buttons & BUTTON_UP:
-                if current_item > 0:
-                    current_item -= 1
-            elif buttons & BUTTON_DOWN:
-                if current_item < len(menu_items) - 1:
-                    current_item += 1
-            elif buttons & BUTTON_SELECT:
-                print("Selected item:", menu_items[current_item])
-                break
-            time.sleep(0.1)
-            
+            if current_item != last_item:
+                self.limpiar_display()
+                for i, item in enumerate(visible_items):
+                    display_text = item['name']
+                    if start_index + i == current_item:
+                        self.oled.text(f"> {display_text}", 0, 10 + (i * 16), 1)
+                    else:
+                        self.oled.text(display_text, 0, 10 + (i * 16), 1)
+                self.oled.show()
+                last_item = current_item 
+
+            command = yield
+            if command == 'UP' and current_item > 0:
+                current_item -= 1
+                if current_item < start_index:
+                    start_index -= 1
+            elif command == 'DOWN' and current_item < len(menu_items) - 1:
+                current_item += 1
+                if current_item >= end_index:
+                    start_index += 1
+            elif command == 'SELECT':
+                selected_item = menu_items[current_item]
+                script_path = selected_item['script']
+                print("Selected item:", selected_item['name'])
+                print("Executing script:", script_path)
+                self.ejecutar_script(script_path)
+                current_item = 0
+                last_item = -1
+
+
+    def ejecutar_script(self, script_path):
+        try:
+            with open(script_path) as script_file:
+                exec(script_file.read())
+        except OSError:
+            print(f"Error: Script '{script_path}' not found.")
+            # si error entonces retorna al menu principal
+            self.menu_principal()
+
+    def menu_principal(self):
+        #imprime el menu principal
+        self.iniciar_display()
+
+        menu_gen = self.imprimir_menu()
+        next(menu_gen)  # Iniciar el generador
+
+        print("Para navegar escribe UP, DOWN o SELECT")
+
+        while True:
+            command = sys.stdin.readline().strip()
+            if command:
+                menu_gen.send(command)
+
+    def limpiar_display(self):
+        self.oled.fill(0)
+        self.oled.show()
+
     def get_buttons(self):
         buttons = 0
         if not self.button_up.value():
