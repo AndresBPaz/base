@@ -1,11 +1,12 @@
 {
     "title": "Menu",
     "items": [
-      {"name": "WiFi", "script": "wifi.py"},
-      {"name": "Bluetooth", "script": "bluetooth.py"},
-      {"name": "Archivos", "script": "archivos.py"},
-      {"name": "RF", "script": "rf.py"},
-      {"name": "Ajustes", "script": "ajustes.py"}
+      {"name": "WiFi",         "script": "/scripts/wifi.py"},
+      {"name": "Bluetooth",    "script": "/scripts/bluetooth.py"},
+      {"name": "Archivos",     "script": "/scripts/archivos.py"},
+      {"name": "RF",           "script": "/scripts/rf.py"}, 
+      {"name": "Ajustes",      "script": "/scripts/ajustes.py"},
+      {"name": "Hostpot Wifi", "script": "/scripts/hostpotwifi.py"}
     ]
   }
   

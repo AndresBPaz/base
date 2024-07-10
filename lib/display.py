@@ -4,6 +4,7 @@ import machine
 import time
 import json
 import sys
+import os
 
 # Definir pines de entrada y salida
 BUTTON_UP_PIN = 12
@@ -38,10 +39,14 @@ class Display:
 
     
     def iniciar_display(self):
-        # Inicializar el objeto self.i2c
-        self.i2c = machine.SoftI2C(scl=machine.Pin(22), sda=machine.Pin(21))
-        self.oled = SSD1306_I2C(128,64,self.i2c)
-
+        try: 
+            # Inicializar el objeto self.i2c
+            self.i2c = machine.SoftI2C(scl=machine.Pin(22), sda=machine.Pin(21))
+            self.oled = SSD1306_I2C(128,64,self.i2c)
+        except OSError:
+            print("Error: No se pudo conectar con el display.")
+            sys.exit(1)
+        
     def print_welcome_message(self, message, duration_in_seconds, clear_screen=False):
         self.welcome_message = message
         self.welcome_duration = duration_in_seconds
@@ -76,7 +81,6 @@ class Display:
         return lines
 
     def load_menu(self, items=None):
-
         if items is None:
             # Load menu items from 'menu.json' file
             try:
@@ -128,20 +132,98 @@ class Display:
                     start_index += 1
             elif command == 'SELECT':
                 selected_item = menu_items[current_item]
-                script_path = selected_item['script']
+                # script_path = selected_item['script'] 
                 print("Selected item:", selected_item['name'])
-                print("Executing script:", script_path)
-                self.ejecutar_script(script_path)
+                # print("Executing script:", script_path)
+                # self.ejecutar_script(script_path)
+                if selected_item['name'] == "WiFi":
+                    from scripts import wifi
+                    wifi = wifi()
+                    wifi.open()
+
+                elif selected_item['name'] == "Bluetooth":
+                    from scripts import bluetooth
+                    bluetooth = bluetooth()
+                    bluetooth.open()
+
+                elif selected_item['name'] == "Archivos":
+                    from scripts import archivos
+                    archivos = archivos()
+                    archivos.open()
+
+                elif selected_item['name'] == "RF":
+                    from scripts import rf
+                    rf = rf()
+                    rf.open()
+
+                elif selected_item['name'] == "Ajustes":
+                    from scripts import ajustes
+                    ajustes = ajustes()
+                    ajustes.open()
+
+                elif selected_item['name'] == "Hostpot Wifi":
+                    from scripts import hostpotwifi
+                    hostpotwifi = hostpotwifi()
+                    hostpotwifi.open()
+
+                else :
+                    print("Invalid item selected")
+
                 current_item = 0
                 last_item = -1
 
+    def imprimir_opciones(self, items=None):
+        self.iniciar_display()
+        # Print the menu to the OLED display
+        current_item = 0
+        menu_items = self.load_menu(items)
+        last_item = -1  # Para rastrear el último elemento seleccionado
+        start_index = 0  # Índice inicial para el desplazamiento
 
-    def ejecutar_script(self, script_path):
+        while True:
+            # Determinar el rango de elementos a mostrar
+            end_index = start_index + 4  # Mostrar 5 elementos a la vez
+            visible_items = menu_items[start_index:end_index]
+
+            if current_item != last_item:
+                self.limpiar_display()
+                for i, item in enumerate(visible_items):
+                    display_text = item['name']
+                    if start_index + i == current_item:
+                        self.oled.text(f"> {display_text}", 0, 10 + (i * 16), 1)
+                    else:
+                        self.oled.text(display_text, 0, 10 + (i * 16), 1)
+                self.oled.show()
+                last_item = current_item 
+
+            command = yield
+            if command == 'UP' and current_item > 0:
+                current_item -= 1
+                if current_item < start_index:
+                    start_index -= 1
+            elif command == 'DOWN' and current_item < len(menu_items) - 1:
+                current_item += 1
+                if current_item >= end_index:
+                    start_index += 1
+            elif command == 'SELECT':
+                selected_item = menu_items[current_item] 
+                print("Selected item:", selected_item['name']) 
+                current_item = 0
+                last_item = -1
+                return selected_item
+
+    def ejecutar_script(self, script_path): 
         try:
-            with open(script_path) as script_file:
-                exec(script_file.read())
+            with open(script_path, "r") as script_file:
+                script_code = script_file.read()
+                exec(script_code)
+                print(f"Script '{script_path}' executed successfully.")
         except OSError:
             print(f"Error: Script '{script_path}' not found.")
+            # si error entonces retorna al menu principal
+            self.menu_principal()
+        except Exception as e:
+            print(f"Error executing script '{script_path}': {e}")
             # si error entonces retorna al menu principal
             self.menu_principal()
 

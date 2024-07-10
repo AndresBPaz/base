@@ -12,12 +12,6 @@ def carga_configuracion():
         global config
         config = json.load(f)
 
-#llama un script personalizado dev.py
-def call_dev():
-    with open('dev.py', 'r') as f:
-        exec(f.read())
-
-
 #print("Cargando configuración...")
 #carga de variables globales.
 carga_configuracion()
@@ -28,14 +22,13 @@ carga_configuracion()
 implements_loader()
 
 # Crear instancia de Display
-display = Display()
+display = Display() 
 
 # Configurar mensaje de bienvenida
-display.print_welcome_message("¡Hola Mundo!", 5 , clear_screen=True)
+display.print_welcome_message("¡Hola Mundo!", 3 , clear_screen=True)
 
 # Bucle principal
 while True:
     #carga de clase encargada de llamar los scripts personalizados. 
-    #call_dev()
     # Cargar e imprimir el menú
    display.menu_principal()
