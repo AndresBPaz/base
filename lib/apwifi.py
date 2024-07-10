@@ -1,5 +1,6 @@
 import network
 import time
+import json
 
 class apwifi:
     """
@@ -12,8 +13,9 @@ class apwifi:
     """
 
     def __init__(self):
-        global config  # Accede a la variable global
-        self.config = config
+        
+        with open('/datos/config.json', 'r') as f:
+            self.config = json.load(f)
         
         """
         Initializes the WifiAP object with the SSID and password for the hotspot.

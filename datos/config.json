@@ -1,5 +1,19 @@
 {
     "board": "TTGO Lora32-OLED",
     "ssid": "YOUR_SSID",
-    "password": "YOUR_PASSWORD"
+    "password": "YOUR_PASSWORD",
+    "OLED_SCL": 22,
+    "OLED_SDA": 21,
+    "OLED_WIDTH": 128,
+    "OLED_HEIGHT": 64,
+    "TFCARD_CS": "IO13",
+    "TFCARD_MISO": "IO02",
+    "TFCARD_MOSI": "IO15",
+    "TFCARD_SCK": "IO14",
+    "TTGO_MOSI": 27,
+    "TTGO_SCLK": 5,
+    "TTGO_CS": 18,
+    "TTGO_DIO": 26,
+    "TTGO_RST": 23,
+    "TTGO_MISO": 19
 }

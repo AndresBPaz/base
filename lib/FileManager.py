@@ -5,6 +5,15 @@ import time
 class FileManager:
 
     def __init__(self):
+        
+        with open('/datos/config.json', 'r') as f:
+            self.config = json.load(f)
+
+        self.TFCARD_CS = self.config["TFCARD_CS"]
+        self.TFCARD_MISO = self.config["TFCARD_MISO"]
+        self.TFCARD_MOSI = self.config["TFCARD_MOSI"]
+        self.TFCARD_SCK = self.config["TFCARD_SCK"]
+
         self.current_dir = os.getcwd()  # Get the current working directory
 
     def list_files(self, path):

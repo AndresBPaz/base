@@ -1,6 +1,6 @@
 from lib.FileManager import FileManager
 from lib.display import Display 
-
+import json
 class Archivos:
     def __init__(self):
         self.file_manager = FileManager()
@@ -27,29 +27,28 @@ class Archivos:
 
         print("Opción seleccionada:", opcion)
 
-        match(opcion):
-            case "Raiz":
-                print("\nFiles in current directory:")
-                self.change_dir("/")
-                self.list_files("/")
-                files = self.list_files("/")
-                for file in files:
-                    print(file)
+        if opcion == "Raiz":
+            print("\nFiles in current directory:")
+            self.change_dir("/")
+            self.list_files("/")
+            files = self.list_files("/")
+            for file in files:
+                print(file)
 
-            case "SD Card":
-                print("\nFiles in SD card:")
-                self.change_dir("/sd")
-                self.list_files("/sd")
-                files = self.list_files("/sd")
-                for file in files:
-                    print(file)
+        elif opcion == "SD Card":
+            print("\nFiles in SD card:")
+            self.change_dir("/sd")
+            self.list_files("/sd")
+            files = self.list_files("/sd")
+            for file in files:
+                print(file)
 
-            case "Salir":
-                print("Saliendo...")
-                return
+        elif opcion == "Salir":
+            print("Saliendo...")
+            return
                     
-            case _ : 
-                print("Opción inválida")
+        else: 
+            print("Opción inválida")
 
     def list_files(self, path):
         return self.file_manager.list_files(path)

@@ -23,6 +23,14 @@ class Display:
     i2c, oled = None, None
 
     def __init__(self):
+        with open('/datos/config.json', 'r') as f:
+            self.config = json.load(f)
+        
+        self.SCL = self.config["OLED_SCL"]
+        self.SDA = self.config["OLED_SDA"]
+        self.OLED_WIDTH = self.config["OLED_WIDTH"]
+        self.OLED_HEIGHT = self.config["OLED_HEIGHT"]
+
         self.i2c = None
         self.oled = None
         self.welcome_message = None  # Mensaje de bienvenida
@@ -41,8 +49,9 @@ class Display:
     def iniciar_display(self):
         try: 
             # Inicializar el objeto self.i2c
-            self.i2c = machine.SoftI2C(scl=machine.Pin(22), sda=machine.Pin(21))
-            self.oled = SSD1306_I2C(128,64,self.i2c)
+            self.i2c = machine.SoftI2C(scl=machine.Pin(self.SCL), sda=machine.Pin(self.SDA))
+            self.oled = SSD1306_I2C(self.OLED_WIDTH,self.OLED_HEIGHT,self.i2c)
+
         except OSError:
             print("Error: No se pudo conectar con el display.")
             sys.exit(1)
@@ -137,34 +146,34 @@ class Display:
                 # print("Executing script:", script_path)
                 # self.ejecutar_script(script_path)
                 if selected_item['name'] == "WiFi":
-                    from scripts import wifi
-                    wifi = wifi()
+                    from scripts.wifi import Wifi
+                    wifi = Wifi()
                     wifi.open()
 
                 elif selected_item['name'] == "Bluetooth":
-                    from scripts import bluetooth
+                    from scripts.bluetooth import bluetooth
                     bluetooth = bluetooth()
                     bluetooth.open()
 
                 elif selected_item['name'] == "Archivos":
-                    from scripts import archivos
-                    archivos = archivos()
+                    from scripts.archivos import Archivos
+                    archivos = Archivos()
                     archivos.open()
 
                 elif selected_item['name'] == "RF":
-                    from scripts import rf
+                    from scripts.rf import rf
                     rf = rf()
                     rf.open()
 
                 elif selected_item['name'] == "Ajustes":
-                    from scripts import ajustes
+                    from scripts.ajustes import ajustes
                     ajustes = ajustes()
                     ajustes.open()
 
                 elif selected_item['name'] == "Hostpot Wifi":
-                    from scripts import hostpotwifi
-                    hostpotwifi = hostpotwifi()
-                    hostpotwifi.open()
+                    from scripts.hostpotwifi import hostpotwifi
+                    hostpot = hostpotwifi()
+                    hostpot.open()
 
                 else :
                     print("Invalid item selected")
